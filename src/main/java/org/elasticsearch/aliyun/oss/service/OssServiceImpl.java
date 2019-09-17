@@ -31,9 +31,9 @@ public class OssServiceImpl extends AbstractComponent implements OssService {
     private OSSClient createClient(RepositoryMetaData repositoryMetaData) {
         OSSClient client;
         String accessKeyId =
-                OssRepository.getSetting(OssClientSettings.ACCESS_KEY_ID, repositoryMetaData);
+            OssRepository.getSetting(OssClientSettings.ACCESS_KEY_ID, repositoryMetaData);
         String secretAccessKey =
-                OssRepository.getSetting(OssClientSettings.SECRET_ACCESS_KEY, repositoryMetaData);
+            OssRepository.getSetting(OssClientSettings.SECRET_ACCESS_KEY, repositoryMetaData);
         String endpoint = OssRepository.getSetting(OssClientSettings.ENDPOINT, repositoryMetaData);
 
         // Using the specified OSS Endpoint, temporary Token information provided by the STS
@@ -46,37 +46,31 @@ public class OssServiceImpl extends AbstractComponent implements OssService {
         return client;
     }
 
-    @Override
-    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest)
-            throws OSSException, ClientException {
+    @Override public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest)
+        throws OSSException, ClientException {
         return this.client.deleteObjects(deleteObjectsRequest);
     }
 
 
-    @Override
-    public boolean doesObjectExist(String bucketName, String key)
-            throws OSSException, ClientException {
+    @Override public boolean doesObjectExist(String bucketName, String key)
+        throws OSSException, ClientException {
         return this.client.doesObjectExist(bucketName, key);
     }
 
-    @Override
-    public boolean doesBucketExist(String bucketName)
-            throws OSSException, ClientException {
+    @Override public boolean doesBucketExist(String bucketName)
+        throws OSSException, ClientException {
         return this.client.doesBucketExist(bucketName);
     }
 
 
-    @Override
-    public ObjectListing listObjects(ListObjectsRequest listObjectsRequest)
-            throws OSSException, ClientException {
+    @Override public ObjectListing listObjects(ListObjectsRequest listObjectsRequest)
+        throws OSSException, ClientException {
         return this.client.listObjects(listObjectsRequest);
     }
 
 
-    @Override
-    public OSSObject getObject(String bucketName, String key)
-            throws OSSException, ClientException {
-
+    @Override public OSSObject getObject(String bucketName, String key)
+        throws OSSException, ClientException {
         ObjectMetadata objectMetadata = this.client.getObjectMetadata(bucketName, key);
         StorageClass storageClass = objectMetadata.getObjectStorageClass();
         if (storageClass == StorageClass.Archive) {
@@ -93,27 +87,23 @@ public class OssServiceImpl extends AbstractComponent implements OssService {
         return this.client.getObject(bucketName, key);
     }
 
-    @Override
-    public PutObjectResult putObject(String bucketName, String key, InputStream input,
-                                     ObjectMetadata metadata) throws OSSException, ClientException {
+    @Override public PutObjectResult putObject(String bucketName, String key, InputStream input,
+        ObjectMetadata metadata) throws OSSException, ClientException {
         return this.client.putObject(bucketName, key, input, metadata);
     }
 
-    @Override
-    public void deleteObject(String bucketName, String key)
-            throws OSSException, ClientException {
+    @Override public void deleteObject(String bucketName, String key)
+        throws OSSException, ClientException {
         this.client.deleteObject(bucketName, key);
     }
 
-    @Override
-    public CopyObjectResult copyObject(String sourceBucketName, String sourceKey,
-                                       String destinationBucketName, String destinationKey) throws OSSException, ClientException {
+    @Override public CopyObjectResult copyObject(String sourceBucketName, String sourceKey,
+        String destinationBucketName, String destinationKey) throws OSSException, ClientException {
         return this.client
-                .copyObject(sourceBucketName, sourceKey, destinationBucketName, destinationKey);
+            .copyObject(sourceBucketName, sourceKey, destinationBucketName, destinationKey);
     }
 
-    @Override
-    public void shutdown() {
+    @Override public void shutdown() {
         this.client.shutdown();
     }
 }
