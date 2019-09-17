@@ -8,18 +8,24 @@
 
 ## 安装插件
 
-### 安装插件
+### 使用预构建包安装插件
 ```bash
-$ bin/elasticsearch-plugin install https://github.com/anjia0532/elasticsearch-repository-oss/releases/download/6.3.1/elasticsearch-repository-oss-6.3.1.zip
+$ bin/elasticsearch-plugin install https://github.com/anjia0532/elasticsearch-repository-oss/releases/download/v7.3.2/elasticsearch-repository-oss-7.3.2.zip
 ```
-
-### 修改es的log4j2配置文件,追加以下两行
-```properties
-logger.com_aliyun.name = com.aliyun.oss
-logger.com_aliyun.level = warn
+### 自行变异安装插件(自定义版本)
+可选项：修改 https://github.com/anjia0532/elasticsearch-repository-oss/blob/cd1289d9bdb850ba43c6c7153370e88b2ce06f4b/pom.xml#L9 
+将7.3.2改成需要的版本号(es的api变动较为频繁，小版本升级没问题，大版本可能会报错，需要自行修复)
+```bash
+$ git clone https://github.com/anjia0532/elasticsearch-repository-oss.git
+$ mvn clean package
+$ /path/to/es_home/bin/elasticsearch-plugin install file:\\\C:\elasticsearch-repository-oss\target\elasticsearch-repository-oss-7.3.2.zip
 ```
 
 ## 创建仓库
+详细配置参数，参考 
+
+https://github.com/anjia0532/elasticsearch-repository-oss/blob/cd1289d9bdb850ba43c6c7153370e88b2ce06f4b/src/main/java/org/elasticsearch/aliyun/oss/service/OssClientSettings.java#L22-L49
+
 ```
 PUT _snapshot/my_backup 
 {
