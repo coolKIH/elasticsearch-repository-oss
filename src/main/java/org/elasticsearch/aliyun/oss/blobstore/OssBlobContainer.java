@@ -1,11 +1,5 @@
 package org.elasticsearch.aliyun.oss.blobstore;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.NoSuchFileException;
-import java.util.Map;
-
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSException;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +10,12 @@ import org.elasticsearch.common.blobstore.BlobMetaData;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStoreException;
 import org.elasticsearch.common.blobstore.support.AbstractBlobContainer;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.NoSuchFileException;
+import java.util.Map;
 /**
  * A class for managing a oss repository of blob entries, where each blob entry is just a named group of bytes
  * Created by yangkongshi on 2017/11/24.
@@ -98,6 +98,11 @@ public class OssBlobContainer extends AbstractBlobContainer {
         blobStore.writeBlob(buildKey(blobName), inputStream, blobSize);
     }
 
+    @Override
+    public void writeBlobAtomic(String blobName, InputStream inputStream, long blobSize, boolean failIfAlreadyExists) throws IOException {
+        writeBlob(blobName,inputStream,blobSize,failIfAlreadyExists);
+    }
+
 
     /**
      * Deletes a blob with giving name, if the blob exists.  If the blob does not exist, this method throws an
@@ -134,6 +139,12 @@ public class OssBlobContainer extends AbstractBlobContainer {
     public Map<String, BlobMetaData> listBlobs() throws IOException {
         return listBlobsByPrefix(null);
     }
+
+    @Override
+    public Map<String, BlobContainer> children() throws IOException {
+        return blobStore.children(path());
+    }
+
     /**
      * Lists all blobs in the container.
      *

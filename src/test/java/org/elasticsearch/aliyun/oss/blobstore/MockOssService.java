@@ -6,7 +6,6 @@ import com.aliyun.oss.model.*;
 import org.elasticsearch.aliyun.oss.service.OssService;
 import org.elasticsearch.aliyun.oss.service.exception.CreateStsOssClientException;
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.io.Streams;
 
 import java.io.ByteArrayInputStream;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yangkongshi on 2017/11/28.
  */
-public class MockOssService extends AbstractComponent implements OssService {
+public class MockOssService implements OssService {
 
     protected final Map<String, OSSObject> blobs = new ConcurrentHashMap<>();
 
@@ -114,7 +113,7 @@ public class MockOssService extends AbstractComponent implements OssService {
     }
 
     @Override
-    public void refreshStsOssClient() throws CreateStsOssClientException {
+    public void refreshStsOssClient() {
 
     }
 

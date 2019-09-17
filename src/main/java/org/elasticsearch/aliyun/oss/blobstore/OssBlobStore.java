@@ -1,5 +1,15 @@
 package org.elasticsearch.aliyun.oss.blobstore;
 
+import com.aliyun.oss.ClientException;
+import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.*;
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.aliyun.oss.service.OssService;
+import org.elasticsearch.common.blobstore.*;
+import org.elasticsearch.common.blobstore.support.PlainBlobMetaData;
+import org.elasticsearch.common.collect.MapBuilder;
+import org.elasticsearch.utils.PermissionHelper;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.PrivilegedExceptionAction;
@@ -7,24 +17,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import com.aliyun.oss.ClientException;
-import com.aliyun.oss.OSSException;
-import com.aliyun.oss.model.DeleteObjectsRequest;
-import com.aliyun.oss.model.ListObjectsRequest;
-import com.aliyun.oss.model.OSSObjectSummary;
-import com.aliyun.oss.model.ObjectListing;
-import com.aliyun.oss.model.ObjectMetadata;
-import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.aliyun.oss.service.OssService;
-import org.elasticsearch.common.blobstore.BlobContainer;
-import org.elasticsearch.common.blobstore.BlobMetaData;
-import org.elasticsearch.common.blobstore.BlobPath;
-import org.elasticsearch.common.blobstore.BlobStore;
-import org.elasticsearch.common.blobstore.BlobStoreException;
-import org.elasticsearch.common.blobstore.support.PlainBlobMetaData;
-import org.elasticsearch.common.collect.MapBuilder;
-import org.elasticsearch.utils.PermissionHelper;
 
 /**
  * An oss blob store for managing oss client write and read blob directly
@@ -52,7 +44,7 @@ public class OssBlobStore implements BlobStore {
         return new OssBlobContainer(blobPath, this);
     }
 
-    @Override
+//    @Override
     public void delete(BlobPath blobPath) throws IOException {
         DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucket);
         Map<String, BlobMetaData> blobs = listBlobsByPrefix(blobPath.buildAsString(), null);
@@ -97,7 +89,7 @@ public class OssBlobStore implements BlobStore {
      */
     Map<String, BlobMetaData> listBlobsByPrefix(String keyPath, String prefix) throws IOException {
         MapBuilder<String, BlobMetaData> blobsBuilder = MapBuilder.newMapBuilder();
-        String actualPrefix = keyPath + (prefix == null ? StringUtils.EMPTY : prefix);
+        String actualPrefix = keyPath + StringUtils.defaultString(prefix);
         String nextMarker = null;
         ObjectListing blobs;
         do {
@@ -111,6 +103,22 @@ public class OssBlobStore implements BlobStore {
         return blobsBuilder.immutableMap();
     }
 
+    public Map<String, BlobContainer> children(BlobPath path) throws IOException {
+
+        final String pathStr = path.buildAsString();
+        final MapBuilder<String, BlobContainer> mapBuilder = MapBuilder.newMapBuilder();
+        String nextMarker = null;
+        ObjectListing blobs;
+        do {
+            blobs = listBlobs(pathStr, nextMarker);
+            for (OSSObjectSummary summary : blobs.getObjectSummaries()) {
+                String blobName = summary.getKey().substring(pathStr.length());
+                mapBuilder.put(blobName, new OssBlobContainer(path.add(blobName), this));
+            }
+            nextMarker = blobs.getNextMarker();
+        } while (blobs.isTruncated());
+        return mapBuilder.immutableMap();
+    }
     /**
      * list blob with privilege check
      *

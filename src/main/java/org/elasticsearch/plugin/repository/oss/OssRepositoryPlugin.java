@@ -23,6 +23,7 @@ import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.RepositoryPlugin;
 import org.elasticsearch.repositories.Repository;
 import org.elasticsearch.repository.oss.OssRepository;
+import org.elasticsearch.threadpool.ThreadPool;
 
 /**
  * A plugin to add a repository type that writes to and from OSS.
@@ -37,9 +38,7 @@ public class OssRepositoryPlugin extends Plugin implements RepositoryPlugin {
         if (sm != null) {
             sm.checkPermission(new SpecialPermission());
         }
-        AccessController.doPrivileged((PrivilegedAction<Void>)() -> {
-            return null;
-        });
+        AccessController.doPrivileged((PrivilegedAction<Void>)() -> null);
     }
 
     protected OssService createStorageService(RepositoryMetaData metadata)
@@ -47,13 +46,14 @@ public class OssRepositoryPlugin extends Plugin implements RepositoryPlugin {
         return new OssServiceImpl(metadata);
     }
 
+
     @Override
-    public Map<String, Repository.Factory> getRepositories(Environment env,
-        NamedXContentRegistry namedXContentRegistry) {
+    public Map<String, Repository.Factory> getRepositories(Environment env, NamedXContentRegistry namedXContentRegistry,
+                                                           ThreadPool threadPool) {
         return Collections.singletonMap(OssRepository.TYPE,
-            (metadata) -> new OssRepository(metadata, env, namedXContentRegistry,
-                createStorageService(metadata)));
+                (metadata) -> new OssRepository(metadata, env, namedXContentRegistry,threadPool, createStorageService(metadata)));
     }
+
 
     @Override
     public List<Setting<?>> getSettings() {

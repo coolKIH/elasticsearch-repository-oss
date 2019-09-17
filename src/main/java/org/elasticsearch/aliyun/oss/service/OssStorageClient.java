@@ -3,16 +3,14 @@ package org.elasticsearch.aliyun.oss.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
-import com.aliyun.oss.ClientConfiguration;
-import com.aliyun.oss.ClientException;
-import com.aliyun.oss.OSSClient;
-import com.aliyun.oss.OSSException;
+import com.aliyun.oss.*;
 import com.aliyun.oss.model.*;
 import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
@@ -30,13 +28,12 @@ import static java.lang.Thread.sleep;
 
 /**
  * @author hanqing.zhq@alibaba-inc.com
- * @date 2018/6/26
  */
 public class OssStorageClient {
     private static final Logger logger = LogManager.getLogger(OssBlobContainer.class);
 
     private RepositoryMetaData metadata;
-    private OSSClient client;
+    private OSS client;
     private Date stsTokenExpiration;
     private String ECS_METADATA_SERVICE = "http://100.100.100.200/latest/meta-data/ram/security-credentials/";
     private final int IN_TOKEN_EXPIRED_MS = 5000;
@@ -51,11 +48,7 @@ public class OssStorageClient {
 
     public OssStorageClient(RepositoryMetaData metadata) throws CreateStsOssClientException {
         this.metadata = metadata;
-        if (StringUtils.isNotEmpty(OssClientSettings.ECS_RAM_ROLE.get(metadata.settings()).toString())) {
-            isStsOssClient = true;
-        } else {
-            isStsOssClient = false;
-        }
+        isStsOssClient = StringUtils.isNotEmpty(OssClientSettings.ECS_RAM_ROLE.get(metadata.settings()).toString());
         readWriteLock = new ReentrantReadWriteLock();
         client = createClient(metadata);
 
@@ -258,8 +251,8 @@ public class OssStorageClient {
         return in;
     }
 
-    private OSSClient createClient(RepositoryMetaData repositoryMetaData) throws CreateStsOssClientException {
-        OSSClient client;
+    private OSS createClient(RepositoryMetaData repositoryMetaData) throws CreateStsOssClientException {
+        OSS client;
 
         String ecsRamRole = OssClientSettings.ECS_RAM_ROLE.get(repositoryMetaData.settings()).toString();
         String stsToken = OssClientSettings.SECURITY_TOKEN.get(repositoryMetaData.settings()).toString();
@@ -267,7 +260,7 @@ public class OssStorageClient {
          * If ecsRamRole exist
          * means use ECS metadata service to get ststoken for auto snapshot.
          * */
-        if (StringUtils.isNotEmpty(ecsRamRole.toString())) {
+        if (StringUtils.isNotEmpty(ecsRamRole)) {
             client = createStsOssClient(repositoryMetaData);
         } else if (StringUtils.isNotEmpty(stsToken)) {
             //no used still now.
@@ -278,34 +271,34 @@ public class OssStorageClient {
         return client;
     }
 
-    private ClientConfiguration extractClientConfiguration(RepositoryMetaData repositoryMetaData) {
-        ClientConfiguration configuration = new ClientConfiguration();
+    private ClientBuilderConfiguration extractClientConfiguration(RepositoryMetaData repositoryMetaData) {
+        ClientBuilderConfiguration configuration = new ClientBuilderConfiguration();
         configuration.setSupportCname(OssRepository.getSetting(OssClientSettings.SUPPORT_CNAME, repositoryMetaData));
         return configuration;
     }
 
-    private OSSClient createAKOssClient(RepositoryMetaData repositoryMetaData) {
+    private OSS createAKOssClient(RepositoryMetaData repositoryMetaData) {
         SecureString accessKeyId =
             OssRepository.getSetting(OssClientSettings.ACCESS_KEY_ID, repositoryMetaData);
         SecureString secretAccessKey =
             OssRepository.getSetting(OssClientSettings.SECRET_ACCESS_KEY, repositoryMetaData);
         String endpoint = OssRepository.getSetting(OssClientSettings.ENDPOINT, repositoryMetaData);
-        return new OSSClient(endpoint, accessKeyId.toString(), secretAccessKey.toString(),
-            extractClientConfiguration(repositoryMetaData));
+        return new OSSClientBuilder().build(endpoint,accessKeyId.toString(),secretAccessKey.toString(),
+                extractClientConfiguration(repositoryMetaData));
     }
 
-    private OSSClient createAKStsTokenClient(RepositoryMetaData repositoryMetaData) {
+    private OSS createAKStsTokenClient(RepositoryMetaData repositoryMetaData) {
         SecureString securityToken = OssClientSettings.SECURITY_TOKEN.get(repositoryMetaData.settings());
         SecureString accessKeyId =
             OssRepository.getSetting(OssClientSettings.ACCESS_KEY_ID, repositoryMetaData);
         SecureString secretAccessKey =
             OssRepository.getSetting(OssClientSettings.SECRET_ACCESS_KEY, repositoryMetaData);
         String endpoint = OssRepository.getSetting(OssClientSettings.ENDPOINT, repositoryMetaData);
-        return new OSSClient(endpoint, accessKeyId.toString(), secretAccessKey.toString(),
+        return new OSSClientBuilder().build(endpoint, accessKeyId.toString(), secretAccessKey.toString(),
             securityToken.toString(), extractClientConfiguration(repositoryMetaData));
     }
 
-    private synchronized OSSClient createStsOssClient(RepositoryMetaData repositoryMetaData)
+    private synchronized OSS createStsOssClient(RepositoryMetaData repositoryMetaData)
         throws CreateStsOssClientException {
         if (isStsTokenExpired() || isTokenWillExpired()) {
             try {
@@ -320,7 +313,7 @@ public class OssStorageClient {
                 if (!response.isSuccessful()) {
                     throw new IOException("ECS meta service server error");
                 }
-                String jsonStringResponse = response.body().string();
+                String jsonStringResponse = Objects.isNull(response.body()) ? StringUtils.EMPTY : response.body().string();
                 JSONObject jsonObjectResponse = JSON.parseObject(jsonStringResponse);
                 String accessKeyId = jsonObjectResponse.getString(ACCESS_KEY_ID);
                 String accessKeySecret = jsonObjectResponse.getString(ACCESS_KEY_SECRET);
@@ -331,7 +324,7 @@ public class OssStorageClient {
                     if (null != this.client) {
                         this.client.shutdown();
                     }
-                    this.client = new OSSClient(endpoint, accessKeyId, accessKeySecret, securityToken,
+                    this.client = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret, securityToken,
                         extractClientConfiguration(repositoryMetaData));
                 } finally {
                     readWriteLock.writeLock().unlock();

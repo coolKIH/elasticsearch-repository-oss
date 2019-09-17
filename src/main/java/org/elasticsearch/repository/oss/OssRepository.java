@@ -1,7 +1,5 @@
 package org.elasticsearch.repository.oss;
 
-import java.io.File;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +17,7 @@ import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.repositories.RepositoryException;
 import org.elasticsearch.repositories.blobstore.BlobStoreRepository;
+import org.elasticsearch.threadpool.ThreadPool;
 
 /**
  * An oss repository working for snapshot and restore.
@@ -32,14 +31,13 @@ public class OssRepository extends BlobStoreRepository {
 
     public static final String TYPE = "oss";
     private final BlobPath basePath;
-    private final boolean compress;
     private final ByteSizeValue chunkSize;
     private final String bucket;
     private final OssService ossService;
 
-    public OssRepository(RepositoryMetaData metadata, Environment env,
-        NamedXContentRegistry namedXContentRegistry, OssService ossService) {
-        super(metadata, env.settings(), namedXContentRegistry);
+    public OssRepository(RepositoryMetaData metadata, Environment environment,
+                         NamedXContentRegistry namedXContentRegistry, ThreadPool threadPool, OssService ossService) {
+        super(metadata, environment.settings(),  getSetting(OssClientSettings.COMPRESS, metadata), namedXContentRegistry, threadPool);
         this.ossService = ossService;
         String ecsRamRole = OssClientSettings.ECS_RAM_ROLE.get(metadata.settings()).toString();
         if (StringUtils.isNotEmpty(ecsRamRole)) {
@@ -61,29 +59,17 @@ public class OssRepository extends BlobStoreRepository {
         } else {
             this.basePath = BlobPath.cleanPath();
         }
-        this.compress = getSetting(OssClientSettings.COMPRESS, metadata);
         this.chunkSize = getSetting(OssClientSettings.CHUNK_SIZE, metadata);
-        logger.info("Using base_path [{}], chunk_size [{}], compress [{}]",
-            basePath, chunkSize, compress);
+        logger.info("Using base_path [{}], chunk_size [{}]",
+            basePath, chunkSize);
     }
-
-    protected BlobStore createBlobStore() throws Exception {
+    protected BlobStore createBlobStore() {
         return new OssBlobStore(bucket, ossService);
     }
 
     @Override
-    protected BlobStore blobStore() {
-        return new OssBlobStore(bucket, ossService);
-    }
-
-    @Override
-    protected BlobPath basePath() {
-        return basePath;
-    }
-
-    @Override
-    protected boolean isCompress() {
-        return compress;
+    public BlobPath basePath() {
+        return this.basePath;
     }
 
     @Override
