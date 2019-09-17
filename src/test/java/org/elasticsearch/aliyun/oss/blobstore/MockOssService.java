@@ -4,10 +4,10 @@ import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSException;
 import com.aliyun.oss.model.*;
 import org.elasticsearch.aliyun.oss.service.OssService;
+import org.elasticsearch.aliyun.oss.service.exception.CreateStsOssClientException;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.settings.Settings;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,10 +25,11 @@ public class MockOssService extends AbstractComponent implements OssService {
     protected final Map<String, OSSObject> blobs = new ConcurrentHashMap<>();
 
     public MockOssService() {
-        super(Settings.EMPTY);
+        super();
     }
 
-    @Override public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest)
+    @Override
+    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest)
         throws OSSException, ClientException {
         for (String key : deleteObjectsRequest.getKeys()) {
             blobs.remove(key);
@@ -36,17 +37,20 @@ public class MockOssService extends AbstractComponent implements OssService {
         return null;
     }
 
-    @Override public boolean doesObjectExist(String bucketName, String key)
+    @Override
+    public boolean doesObjectExist(String bucketName, String key)
         throws OSSException, ClientException {
         return blobs.containsKey(key);
     }
 
-    @Override public boolean doesBucketExist(String bucketName)
+    @Override
+    public boolean doesBucketExist(String bucketName)
         throws OSSException, ClientException {
         return true;
     }
 
-    @Override public ObjectListing listObjects(ListObjectsRequest listObjectsRequest)
+    @Override
+    public ObjectListing listObjects(ListObjectsRequest listObjectsRequest)
         throws OSSException, ClientException {
         ObjectListing objectListing = new ObjectListing();
         objectListing.setTruncated(false);
@@ -62,7 +66,8 @@ public class MockOssService extends AbstractComponent implements OssService {
         return objectListing;
     }
 
-    @Override public OSSObject getObject(String bucketName, String key)
+    @Override
+    public OSSObject getObject(String bucketName, String key)
         throws OSSException, ClientException, IOException {
         OSSObject ossObject = new OSSObject();
         synchronized (this) {
@@ -75,7 +80,8 @@ public class MockOssService extends AbstractComponent implements OssService {
         return ossObject;
     }
 
-    @Override public PutObjectResult putObject(String bucketName, String key, InputStream input,
+    @Override
+    public PutObjectResult putObject(String bucketName, String key, InputStream input,
         ObjectMetadata metadata) throws OSSException, ClientException, IOException {
         synchronized (this) {
             OSSObject ossObject = new OSSObject();
@@ -88,20 +94,33 @@ public class MockOssService extends AbstractComponent implements OssService {
         return null;
     }
 
-    @Override public void deleteObject(String bucketName, String key)
+    @Override
+    public void deleteObject(String bucketName, String key)
         throws OSSException, ClientException {
         blobs.remove(key);
     }
 
-    @Override public CopyObjectResult copyObject(String sourceBucketName, String sourceKey,
+    @Override
+    public CopyObjectResult copyObject(String sourceBucketName, String sourceKey,
         String destinationBucketName, String destinationKey) throws OSSException, ClientException {
         OSSObject sourceOssObject = blobs.get(sourceKey);
         blobs.put(destinationKey, sourceOssObject);
         return null;
     }
 
-    @Override public void shutdown() {
+    @Override
+    public void shutdown() {
         blobs.clear();
+    }
+
+    @Override
+    public void refreshStsOssClient() throws CreateStsOssClientException {
+
+    }
+
+    @Override
+    public boolean isUseStsOssClient() {
+        return false;
     }
 
     /**
@@ -126,6 +145,5 @@ public class MockOssService extends AbstractComponent implements OssService {
         String lcPrefix = prefix.toLowerCase(Locale.ROOT);
         return lcStr.equals(lcPrefix);
     }
-
 
 }

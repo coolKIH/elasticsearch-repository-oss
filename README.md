@@ -36,7 +36,7 @@ PUT _snapshot/my_backup
 * <1> 本处的OSS, 要求和你的elasticsearch集群在同一个region中, 这里的endpoint填的是这个region对应的内网地址 ,具体参考 https://help.aliyun.com/document_detail/31837.html?spm=5176.doc31922.6.577.YxqZYt 中`ECS访问的内网Endpoint`一栏
 * <2> 需要一个已经存在的OSS bucket
 
-假设我们上传的数据非常大, 我们可以限制snapshot过程中分块的大小,超过这个大小，数据将会被分块上传到OSS中
+假设我们上传的数据非常大, 我们可以限制snapshot过程中分块的大小,超过这个大小，数据将会被分块上传到OSS中
 
 ```
 POST _snapshot/my_backup/ <1>

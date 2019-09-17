@@ -17,7 +17,8 @@ public class JarHell {
 
     public static void checkJarHell(URL urls[]) throws Exception {
     }
-    public static void checkJarHell(Consumer consumer) throws Exception {
+
+    public static void checkJarHell(Consumer<String> output) throws Exception {
     }
 
     public static void checkVersionFormat(String targetVersion) {
@@ -26,7 +27,5 @@ public class JarHell {
     public static void checkJavaVersion(String resource, String targetVersion) {
     }
 
-    public static Set<URL> parseClassPath() {
-        return new HashSet<>();
-    }
+    public static Set<URL> parseClassPath() {return new HashSet<>();}
 }
