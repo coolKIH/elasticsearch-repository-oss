@@ -12,13 +12,13 @@ public class JarHell {
     private JarHell() {
     }
 
-    public static void checkJarHell() throws Exception {
+    public static void checkJarHell() {
     }
 
-    public static void checkJarHell(URL urls[]) throws Exception {
+    public static void checkJarHell(URL[] urls) {
     }
 
-    public static void checkJarHell(Consumer<String> output) throws Exception {
+    public static void checkJarHell(Consumer<String> output) {
     }
 
     public static void checkVersionFormat(String targetVersion) {
