@@ -80,7 +80,7 @@ public class OssServiceImpl extends AbstractComponent implements OssService {
             this.client.restoreObject(bucketName, key);
             try {
                 do {
-                    Thread.sleep(100);
+                    Thread.sleep(1000);
                     objectMetadata = this.client.getObjectMetadata(bucketName, key);
                     logger.debug("restore object:{}",objectMetadata);
                 } while (!objectMetadata.isRestoreCompleted());
@@ -101,6 +101,7 @@ public class OssServiceImpl extends AbstractComponent implements OssService {
 
     @Override public CopyObjectResult copyObject(String sourceBucketName, String sourceKey,
                                                  String destinationBucketName, String destinationKey) throws OSSException, ClientException {
+        restoreObject(sourceBucketName, sourceKey);
         return this.client
                 .copyObject(sourceBucketName, sourceKey, destinationBucketName, destinationKey);
     }
