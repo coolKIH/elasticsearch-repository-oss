@@ -12,8 +12,11 @@
 ```bash
 $ bin/elasticsearch-plugin install https://github.com/anjia0532/elasticsearch-repository-oss/releases/download/v7.3.2/elasticsearch-repository-oss-7.3.2.zip
 ```
-### 自行变异安装插件(自定义版本)
-可选项：修改 https://github.com/anjia0532/elasticsearch-repository-oss/blob/cd1289d9bdb850ba43c6c7153370e88b2ce06f4b/pom.xml#L9 
+### 自行编译安装插件(自定义版本)
+可选项：修改 
+
+https://github.com/anjia0532/elasticsearch-repository-oss/blob/cd1289d9bdb850ba43c6c7153370e88b2ce06f4b/pom.xml#L9
+ 
 将7.3.2改成需要的版本号(es的api变动较为频繁，小版本升级没问题，大版本可能会报错，需要自行修复)
 ```bash
 $ git clone https://github.com/anjia0532/elasticsearch-repository-oss.git
