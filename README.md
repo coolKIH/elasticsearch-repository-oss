@@ -1,5 +1,6 @@
 # elasticsearch-repository-oss
 
+- 适配 Elasticsearch 7.3.0
 
 要备份你的集群，你可以使用 `snapshot` API。这个会拿到你集群里当前的状态和数据然后保存到一个共享仓库里。这个备份过程是"智能"的。你的第一个快照会是一个数据的完整拷贝，但是所有后续的快照会保留的是已存快照和新数据之间的差异。随着你不时的对数据进行快照，备份也在增量的添加和删除。这意味着后续备份会相当快速，因为它们只传输很小的数据量。
 
@@ -9,20 +10,21 @@
 ## 安装插件
 
 ### 使用预构建包安装插件
+下载预构建包到本地之后，假设文件完整路径为 `/path/to/elasticsearch-repository-oss-x.y.z.zip`:
 ```bash
-$ bin/elasticsearch-plugin install https://github.com/anjia0532/elasticsearch-repository-oss/releases/download/v7.3.2/elasticsearch-repository-oss-7.3.2.zip
+bin/elasticsearch-plugin install file:///path/to/elasticsearch-repository-oss-x.y.z.zip
 ```
-### 自行编译安装插件(自定义版本)
-可选项：修改 
+### 自行编译安装插件 (自定义版本)
+若想改成其他适用的 Elasticsearch 版本，可以在pom.xml中将7.3.0改成需要的版本号 (es的API变动较为频繁，小版本升级没问题，大版本可能会报错，需要自行修复)。
 
-https://github.com/anjia0532/elasticsearch-repository-oss/blob/cd1289d9bdb850ba43c6c7153370e88b2ce06f4b/pom.xml#L9
- 
-将7.3.2改成需要的版本号(es的api变动较为频繁，小版本升级没问题，大版本可能会报错，需要自行修复)
 ```bash
-$ git clone https://github.com/anjia0532/elasticsearch-repository-oss.git
-$ mvn clean package
-$ /path/to/es_home/bin/elasticsearch-plugin install file:\\\C:\elasticsearch-repository-oss\target\elasticsearch-repository-oss-7.3.2.zip
+git clone ...
+mvn clean package
+bin/elasticsearch-plugin install file:///path/to/target/elasticsearch-repository-oss-x.y.z.zip
 ```
+注意：
+- 使用 JDK 8 来编译打包
+- Maven 版本 3.6.3
 
 ## 创建仓库
 详细配置参数，参考 
